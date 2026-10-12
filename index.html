@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uz"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -230,7 +231,7 @@ function menu(x,y){const a=cur;mn.innerHTML=`<h3>${a.n}</h3><small>${stat(a)}</s
 const md=$('#md'),mb=$('#mb');md.onclick=e=>{if(e.target===md)md.classList.remove('on')};
 function modal(h){mb.style.width='';mb.innerHTML=h+'<button id="cl">Yopish</button>';md.classList.add('on');$('#cl').onclick=()=>md.classList.remove('on')}
 // AI
-let S;async function ai(a,q){S=S||await (window.claude?claude.use('sample'):null);if(!S)throw new Error("AI ulanmadi: sahifani claude.ai ichida oching.");
+let S=null;async function ai(a,q){if(!S)throw new Error("AI ulanmadi: sahifani yangilab parolni kiriting.");
  const r=await S(`Sen "${a.n}" nomli AI agentsan. Roling: ${a.role}. Dasturlash jamoasida ishlaysan. Doim o'zbek tilida javob ber.\n${q}`,{cache:false});return r.text}
 async function assign(a,txt){a.task=txt;a.busy=true;if(a.where!=='desk'||a.moving)goto(a,'desk');say(a.n,"Vazifa qabul qilindi, boshladim: "+txt,1);
  try{const r=await ai(a,`Vazifa: ${txt}\nAgar sayt, sahifa yoki ilova so'ralgan bo'lsa: professional darajada, zamonaviy va chiroyli dizaynda, to'liq ishlaydigan bitta HTML fayl yoz (inline CSS va JS), uni \`\`\`html blokida ber va oldidan 2 jumla izoh yoz. Boshqa vazifada amaliy va aniq javob ber.`);
@@ -242,7 +243,7 @@ function resultModal(a,txt,r){const m=r.match(/```html\s*([\s\S]*?)```/)||r.matc
  mb.style.width='min(880px,100%)';$('#tq').textContent=txt;$('#rt').textContent=html?r.replace(/```html[\s\S]*?```/,'(kod yuqorida)'):r;
  if(html){mb.querySelector('iframe').srcdoc=html;$('#cd').textContent=html;
   $('#cp').onclick=()=>{navigator.clipboard.writeText(html).then(()=>chat("Tizim","Kod nusxalandi."),()=>chat("Tizim","Nusxalash ishlamadi, 'Kodni ko'rish' dan oling."))};
-  $('#dl').onclick=async()=>{try{const d=await claude.use('downloads');if(!d)throw 0;await d.save({filename:'sayt.html',data:html})}catch(e){chat("Tizim","Yuklab olish ishlamadi, kodni nusxalang.")}}}}
+  $('#dl').onclick=()=>{const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));l.download='sayt.html';l.click()}}}
 function assignUI(a){modal(`<h3>${a.n}ga vazifa</h3><textarea id="tx" placeholder="Masalan: login sahifasi uchun JavaScript kodi yoz"></textarea><button id="ok">Buyurish</button>`);
  $('#ok').onclick=()=>{const v=$('#tx').value.trim();if(!v)return;md.classList.remove('on');assign(a,v)}}
 async function report(a){modal(`<h3>${a.n} hisoboti</h3><pre>Hisobot tayyorlanmoqda...</pre>`);
@@ -257,7 +258,7 @@ $('#mt').onclick=()=>{meeting=!meeting;$('#mt').textContent=meeting?"Majlisni tu
  else{AG.forEach(a=>{a.cur=null;a.rest=0});chat("Tizim","Majlis tugadi. Agentlar jadvalga qaytdi.")}};
 async function send(){const v=$('#cin').value.trim();if(!v)return;$('#cin').value='';chat('Siz',v,'me');
  const who=AG;if(/sayt|sahifa|dastur|kod|yasab|yarat|ilova|bot|loyiha/i.test(v)){assign(AG[1],v);return}
- try{S=S||await (window.claude?claude.use('sample'):null);if(!S)throw new Error("AI ulanmadi: sahifani claude.ai ichida oching.");
+ try{if(!S)throw new Error("AI ulanmadi: sahifani yangilab parolni kiriting.");
   const r=await S(`Ofis umumiy chati. Soat ${hms().hour}:${hms().minute} (Toshkent). Oxirgi xabarlar:\n${hist.slice(-8).join('\n')}\nOfis egasi yozdi: "${v}"\nUyda bo'lgan agentlar telefon orqali yozadi. Javob beradigan agentlar: ${who.map(a=>`${a.n} (${a.role}; holati: ${stat(a)})`).join('; ')}.\n${meeting?"Majlis ketyapti, hamma qatnashadi, agentlar bir-biriga ham murojaat qilsin. ":"Faqat 1-2 ta mos agent javob bersin. "}Har biri o'z shaxsiyati bilan, real odamdek, qisqa, o'zbekcha yozsin. Faqat JSON massiv: [{"who":"ism","t":"matn"}]. "who" aynan agent ismi bo'lsin.`,{cache:false});
   JSON.parse(r.text.match(/\[[\s\S]*\]/)[0]).forEach((l,k)=>setTimeout(()=>say(l.who,l.t,1),k*1800))}
  catch(e){chat("Tizim","Xato: "+(e.message||e.code||e))}}
@@ -298,7 +299,7 @@ function siteModal(pr){modal(`<h3>${pr.title}</h3><small>${pr.desc} Muallif: ${p
  mb.style.width='min(880px,100%)';if(!pr.html)return;const f=mb.querySelector('iframe');f.srcdoc=pr.html;
  $('#okb').onclick=()=>{pr.col='done';save();drawBoard();chat('Siz',`"${pr.title}" ishlaydi, ajoyib!`,'me');say(pr.by,"Rahmat! Tayyor deb belgilayman.",1)};
  $('#fx').onclick=async()=>{const v=$('#fb').value.trim();if(!v)return;$('#fb').value='';chat('Siz',`"${pr.title}": ${v}`,'me');const d=AG[1];bubble(d.n,"Qabul qildim, hozir tuzataman.",'🛠 ');
-  try{if(!S)S=await(window.claude?claude.use('sample'):null);if(!S)throw 0;const r=await S(`Sen ${d.n}san, dasturchi. Mana sayt kodi:\n${pr.html.slice(0,6000)}\nFoydalanuvchi fikri: ${v}\nKodni tuzat. Faqat to'liq yangi HTML kodni qaytar, izohsiz.`,{cache:false});pr.html=r.text.replace(/```(html)?/g,'').trim();save();f.srcdoc=pr.html;say(d.n,"Tuzatdim, qayta sinab ko'ring.",1)}
+  try{if(!S)throw 0;const r=await S(`Sen ${d.n}san, dasturchi. Mana sayt kodi:\n${pr.html.slice(0,6000)}\nFoydalanuvchi fikri: ${v}\nKodni tuzat. Faqat to'liq yangi HTML kodni qaytar, izohsiz.`,{cache:false});pr.html=r.text.replace(/```(html)?/g,'').trim();save();f.srcdoc=pr.html;say(d.n,"Tuzatdim, qayta sinab ko'ring.",1)}
   catch(e){say(d.n,"Yozib oldim, keyingi versiyada tuzataman.",1)}}}
 function gather(pr){AG.forEach((a,i)=>{if(a.where!=='meet')goto(a,'meet',4*60000,i)});if(pr.col==='todo'){pr.col='doing';save();drawBoard()}
  siteModal(pr);
@@ -346,4 +347,11 @@ const EV=[
  ()=>{notify("🚨 Yong'in signali (mashq)! Hamma ko'chaga chiqyapti");drill=Date.now()+110000;AG.forEach(a=>{if(a.where!=='home'){a.asking=0;a.out=1;goto(a,'home',100000);bubble(a.n,"Tinch, ko'chaga chiqamiz!",'🚨 ')}});ebub(GD[0],"Hammasi ko'chaga, tartib bilan!")},
  ()=>spawnStranger('courier')];
 setTimeout(()=>P(EV)(),60000);setInterval(()=>{if(modeAt(minNow())==='work'&&Math.random()<.6)P(EV)()},150000);
+// AI: server orqali (parol bilan)
+async function apiSample(q){const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pw:localStorage.getItem('ofis:pw'),prompt:typeof q==='string'?q:JSON.stringify(q)})});const j=await r.json();
+ if(!r.ok){if(r.status===401){localStorage.removeItem('ofis:pw');S=null;login("Parol eskirdi, qayta kiriting.")}throw new Error(j.error||'AI xatosi')}return{text:j.text}}
+function login(msg){modal(`<h3>Parol</h3><small>${msg||"AI agentlar ishlashi uchun parolni kiriting (24 soatda bir marta)."}</small><input id="pw" type="password" style="padding:8px;border:1px solid var(--ln);border-radius:6px;background:var(--pn);color:var(--ink)"><button id="pb">Kirish</button>`);
+ $('#pb').onclick=async()=>{const pw=$('#pw').value;const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pw})});
+  if(r.ok){localStorage.setItem('ofis:pw',pw);localStorage.setItem('ofis:pwt',Date.now());S=apiSample;md.classList.remove('on');chat("Tizim","Parol to'g'ri, AI agentlar ishga tushdi.")}else login("Parol noto'g'ri.")}}
+(function(){const t=+localStorage.getItem('ofis:pwt')||0;if(localStorage.getItem('ofis:pw')&&Date.now()-t<864e5)S=apiSample;else login()})();
 </script></body></html>
