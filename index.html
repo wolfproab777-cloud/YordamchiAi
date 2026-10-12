@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="uz"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Ofis</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#eef2f1;--pn:#fff;--ink:#14232b;--mu:#5d707a;--ln:#cdd8d6;--ac:#0f7f78}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d171c;--pn:#142229;--ink:#e6efee;--mu:#8fa5ad;--ln:#25383f;--ac:#3fd0c4}}
+:root[data-theme="dark"]{--bg:#0d171c;--pn:#142229;--ink:#e6efee;--mu:#8fa5ad;--ln:#25383f;--ac:#3fd0c4}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Trebuchet MS",Verdana,sans-serif}
+h1{font:700 18px Georgia,serif;margin:0}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px}
+#clk{font:700 16px Georgia,serif;color:var(--ac);margin-left:auto}
+.bb{background:#fff;color:#111;padding:5px 8px;border-radius:8px;white-space:normal;width:max-content;max-width:190px;font-size:12px;line-height:1.3;text-shadow:none}
+#ci{display:flex;gap:6px;margin-top:6px}#ci input{flex:1;min-width:0;font:inherit;padding:7px;border:1px solid var(--ln);border-radius:6px;background:var(--pn);color:var(--ink)}
+.me{color:var(--ac)}#nt{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px 8px}#nt button{background:var(--pn);color:var(--ink);border:1px solid var(--ac);font-weight:600;font-size:12.5px;text-align:left}
+main{display:grid;grid-template-columns:1fr 300px;gap:10px;padding:0 8px 10px}
+#st{position:relative;height:88vh;min-height:520px;border-radius:10px;overflow:hidden;background:#0d171c;touch-action:none}
+#st canvas{display:block;width:100%;height:100%}
+.tg{position:absolute;transform:translate(-50%,-100%);font-size:11px;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap;text-align:center}
+.rm{color:#bfe;opacity:.8}
+aside{display:flex;flex-direction:column;gap:10px;min-width:0}
+.bx{background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:10px}
+.bx h2{font:700 14px Georgia,serif;margin:0 0 6px}
+.ag{padding:6px 0;border-top:1px solid var(--ln)}.ag:first-of-type{border:0}
+.ag b{color:var(--ac)}.ag small,small{color:var(--mu)}
+#lg{height:200px;overflow:auto;font-size:12.5px}#lg p{margin:0 0 5px}
+button,select,textarea{font:inherit;border-radius:6px;border:1px solid var(--ln);background:var(--pn);color:var(--ink);padding:7px 10px}
+button{background:var(--ac);color:#04201e;font-weight:700;border:0;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#mn{position:absolute;display:none;flex-direction:column;gap:6px;background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:10px;width:210px;z-index:5;color:var(--ink)}
+#mn.on{display:flex}#mn h3{margin:0;font-size:14px}
+#md{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:9;padding:16px}
+#md.on{display:flex}
+#mb{background:var(--pn);color:var(--ink);border-radius:12px;padding:16px;width:min(560px,100%);max-height:80vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+#mb pre{white-space:pre-wrap;margin:0;font:13px/1.45 inherit;overflow-x:auto}
+#mb textarea{min-height:90px}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>AI ofis</h1><span id="clk"></span>
+</header>
+<div id="nt" aria-live="polite"></div>
+<main>
+<div id="st"><div id="mn"></div></div>
+<aside>
+ <div class="bx"><h2>Agentlar nima qilyapti</h2><button id="mt" style="width:100%;margin-bottom:6px">Majlisga chaqirish</button><div id="pl"></div><div id="ls"></div></div>
+ <div class="bx"><h2>Ofis suhbati</h2><div id="lg" aria-live="polite"></div><div id="ci"><input id="cin" placeholder="Umumiy chatga yozing..." aria-label="Chat"><button id="cs">Yuborish</button></div></div>
+ <small>Sichqoncha bilan aylantiring, g'ildirak bilan yaqinlashing.</small>
+</aside></main>
+<div id="md"><div id="mb"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),T=THREE,PI=Math.PI;
+const st=$('#st'),scene=new T.Scene();scene.background=new T.Color(0x0d171c);
+const cam=new T.PerspectiveCamera(50,1,.1,200),ren=new T.WebGLRenderer({antialias:true});st.prepend(ren.domElement);
+const amb=new T.AmbientLight(0xffffff,.75);scene.add(amb);const sun=new T.DirectionalLight(0xffffff,.7);sun.position.set(8,18,12);scene.add(sun);
+const LM=c=>new T.MeshLambertMaterial({color:c});
+const bx=(w,h,d,c,x,y,z,p)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),LM(c));m.position.set(x,y,z);(p||scene).add(m);return m};
+const gl=(w,h,d,x,y,z)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),new T.MeshLambertMaterial({color:0x9fe3ee,transparent:true,opacity:.2}));m.position.set(x,y,z);scene.add(m)};
+const cy=(r,h,c,x,y,z,p)=>{const m=new T.Mesh(new T.CylinderGeometry(r,r,h,14),LM(c));m.position.set(x,y,z);(p||scene).add(m);return m};
+const tags=[];
+function tag(x,y,z,txt,cls){const e=document.createElement('div');e.className='tg '+(cls||'');e.innerHTML=txt;st.appendChild(e);const o={v:new T.Vector3(x,y,z),e};tags.push(o);return o}
+// ofis: 30 x 32
+bx(30,.2,32,0x6d7f86,0,-.1,6);bx(30,3.6,.3,0xe3e8e6,0,1.8,-10);bx(13.5,3.6,.3,0xe3e8e6,-8.25,1.8,22);bx(13.5,3.6,.3,0xe3e8e6,8.25,1.8,22);bx(.3,3.6,32,0xd5dcda,-15,1.8,6);bx(.3,3.6,32,0xd5dcda,15,1.8,6);
+[[-12.25,5.5],[-4,5],[4,5],[12.25,5.5]].forEach(p=>bx(p[1],2.6,.2,0xdfe5e3,p[0],1.3,10.5));bx(.2,2.6,11.5,0xdfe5e3,-1.5,1.3,16.25);bx(.2,2.6,11.5,0xdfe5e3,1.5,1.3,16.25);
+bx(14,.02,11,0x8b7a66,-7.5,.02,16.5);bx(14,.02,11,0xc9c2b0,7.5,.02,16.5);
+tag(-8,2.8,10.5,'Yotoqxona','rm');tag(8,2.8,10.5,'Oshxona','rm');
+[-12.5,-9.5,-6.5,-3.5].forEach((x,i)=>{bx(1.2,.35,2.3,0x6b4a2e,x,.18,18);bx(1.1,.2,2.2,0xf1ece4,x,.45,18);bx(.6,.12,.35,0xffffff,x,.6,17.2);bx(1.12,.1,1.2,[0x4a6fa5,0x5b8c5a,0xa55a5a,0x8e6bbf][i],x,.62,18.6)});
+[4,12].forEach(x=>{bx(3.4,.1,1.4,0x8a6a45,x,.8,15.5);[-1.5,1.5].forEach(d=>bx(.1,.8,1.2,0x5a4630,x+d,.4,15.5));cy(.12,.12,0xe0a030,x-.6,.9,15.5);cy(.1,.1,0xd04040,x+.6,.9,15.5);
+ [x-1,x+1].forEach(c=>{chair(c,14.2,0);chair(c,16.8,PI)})});
+bx(8,1,.8,0x8a8f93,8,.5,21.2);cy(.2,.5,0xcccccc,6,1.2,21.2);cy(.2,.5,0xcccccc,10,1.2,21.2);plant(-14,21);plant(14,21);
+function room(cx,cz,w,d,ws,c,glass){const W=(ww,hh,dd,x,z)=>glass?gl(ww,hh,dd,cx+x,1.1,cz+z):bx(ww,2.2,dd,c,cx+x,1.1,cz+z);
+ if(ws.includes('b'))W(w,2.2,.15,0,-d/2);if(ws.includes('l'))W(.15,2.2,d,-w/2,0);if(ws.includes('r'))W(.15,2.2,d,w/2,0)}
+function sofa(x,z,ry,w,c){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);bx(w,.4,.9,c,0,.25,0,g);bx(w,.6,.2,c,0,.7,-.4,g);bx(.2,.5,.9,c,-w/2,.5,0,g);bx(.2,.5,.9,c,w/2,.5,0,g)}
+function chair(x,z,ry){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);bx(.6,.08,.6,0x33434a,0,.45,0,g);bx(.6,.7,.08,0x33434a,0,.85,-.3,g);cy(.05,.45,0x222,0,.22,0,g)}
+function shelf(x,z,ry){const g=new T.Group();g.position.set(x,0,z);g.rotation.y=ry;scene.add(g);bx(2.4,2.4,.5,0x6b4a2e,0,1.2,0,g);
+ for(let r=0;r<4;r++)for(let i=0;i<9;i++)bx(.2,.4,.1,[0xc0392b,0x2980b9,0xf1c40f,0x27ae60,0x8e44ad][(i+r)%5],-1+i*.25,.4+r*.55,.22,g)}
+function plant(x,z){cy(.25,.4,0x8a5a3c,x,.2,z);const s=new T.Mesh(new T.SphereGeometry(.4,12,12),LM(0x2e8b57));s.position.set(x,.8,z);scene.add(s)}
+// bo'limlar
+room(-12.5,-1.5,4,3,'blr',0xcfd8e3);room(12.5,-1.5,4,3,'blr',0xe3dccf);room(11,6.5,7,6,'blr',0,true);
+tag(-12.5,2.4,-1.5,'Kiyinish xonasi','rm');tag(12.5,2.4,-1.5,'Tualet','rm');tag(11,2.4,3.6,'Majlis xonasi','rm');tag(-11,2.4,8,'Kitob o\'qish','rm');tag(0,2,9,'Dam olish','rm');
+[-13.4,-12.5,-11.6].forEach((x,i)=>bx(.8,2,.5,[0x4a6fa5,0x5b8c5a,0xa55a5a][i],x,1,-2.7));
+cy(.22,.45,0xffffff,13.6,.22,-1.5);bx(.2,.7,.5,0xffffff,14.1,.7,-1.5);
+bx(3.4,.1,1.6,0x8a6a45,11,.8,6.5);[[-1.4,-.6],[1.4,-.6],[-1.4,.6],[1.4,.6]].forEach(l=>bx(.1,.8,.1,0x5a4630,11+l[0],.4,6.5+l[1]));
+[9.8,12.2].forEach(x=>{chair(x,4.6,0);chair(x,8.4,PI)});bx(2.4,1.2,.05,0xf5f5f5,11,2,3.5);
+sofa(0,7.7,PI,3,0x7c4dff);bx(1.6,.4,.8,0x8a6a45,0,.2,5.9);plant(-3,9);plant(3,9);plant(14,9);plant(-14,3);
+shelf(-14.6,8,PI/2);shelf(-14.6,5.5,PI/2);sofa(-11,7,-PI/2,1.2,0xd35400);sofa(-11,9,-PI/2,1.2,0xd35400);bx(3,.02,3,0x2c5a6e,-11,.02,8);
+// ko'cha, darvoza, qo'riqchi xonasi, direktor xonasi
+bx(70,.04,50,0x365a3a,0,-.07,30);bx(30,.06,8,0x9aa0a4,0,-.02,26);bx(70,.05,7,0x2b2f33,0,-.02,33.5);
+bx(3,.8,.3,0xb08d57,0,3.2,22);tag(0,3.9,22,"Darvoza · qo'riqlanadi",'rm');tag(0,2,33.5,"Ko'cha",'rm');
+[[-9,27],[-5,27],[13,28],[-14,28]].forEach(p=>plant(p[0],p[1]));
+bx(6,.03,4.4,0x8a7a66,8,.02,25.7);room(8,25.7,6,4.4,'blr',0xcfd2d8);bx(1.6,.08,.8,0x7a5a3a,8,.75,25.7);cy(.12,.1,0xe0a030,8,.85,25.7);tag(8,2.8,25.7,"Qo'riqchilar xonasi",'rm');
+room(0,-2,4,2.4,'lrb',0,true);bx(1.6,.08,.7,0x6b4a2e,0,.75,-2.4);bx(.9,.5,.04,0x111111,0,1.1,-2.5);bx(.5,.7,.5,0x555555,1.5,.35,-2.7);chair(0,-3.05,0);tag(0,2.6,-2,"Direktor xonasi",'rm');
+const OW=human({sh:0x1b1b2f,hr:0x222222,sk:0xe8b98f});OW.position.set(0,-.45,-3);OW.legs.forEach(l=>l.rotation.x=-1.5);OW.arms.forEach(l=>l.rotation.x=-1.2);tag(0,2.3,-3,'Siz (direktor)');
+// agentlar
+const R=(a,b)=>a+Math.random()*(b-a),P=a=>a[Math.floor(Math.random()*a.length)];
+const AG=[
+ {n:"GPT-4o",k:"pm",role:"Loyiha menejeri, vazifalarni rejalashtiradi",sh:0xf2a541,hr:0x3b2a1a,sk:0xf0cfb0},
+ {n:"Claude 3.5 Sonnet",k:"dev",role:"Katta dasturchi, kod yozadi va xatolarni tuzatadi",sh:0x3fd0c4,hr:0x1a1a1a,sk:0xe8b98f},
+ {n:"Gemini 1.5 Pro",k:"an",role:"Tahlilchi, ma'lumot va arxitektura tahlili",sh:0x8f8cf0,hr:0x6a4a2a,sk:0xf3d6bd},
+ {n:"Midjourney",k:"ds",role:"Dizayner, interfeys va vizual g'oyalar",sh:0xe86a92,hr:0x111111,sk:0xc89a74}];
+function human(a){const g=new T.Group(),add=(geo,c,x,y,z,p)=>{const m=new T.Mesh(geo,LM(c));m.position.set(x,y,z);(p||g).add(m);if(c===a.sh)(g.cloth=g.cloth||[]).push(m.material);return m};
+ const S=r=>new T.SphereGeometry(r,14,14);
+ add(new T.BoxGeometry(.5,.7,.28),a.sh,0,1.15,0);add(new T.CylinderGeometry(.07,.07,.12,8),a.sk,0,1.55,0);add(S(.2),a.sk,0,1.7,0);
+ add(new T.SphereGeometry(.215,14,8,0,PI*2,0,PI/1.9),a.hr,0,1.72,-.015);
+ add(S(.03),0x111111,-.07,1.72,.18);add(S(.03),0x111111,.07,1.72,.18);add(S(.025),a.sk,0,1.67,.2);add(new T.BoxGeometry(.08,.015,.02),0x9b3d3d,0,1.6,.19);
+ const limb=(x,y,w,h,c,hand)=>{const p=new T.Group();p.position.set(x,y,0);g.add(p);add(new T.BoxGeometry(w,h,w),c,0,-h/2,0,p);
+  if(hand)add(S(.07),a.sk,0,-h-.03,0,p);else add(new T.BoxGeometry(.18,.08,.3),0x111111,0,-h,.06,p);return p};
+ g.arms=[limb(-.34,1.45,.13,.6,a.sh,1),limb(.34,1.45,.13,.6,a.sh,1)];g.legs=[limb(-.13,.8,.17,.8,0x2b3a55),limb(.13,.8,.17,.8,0x2b3a55)];
+ scene.add(g);return g}
+const CX=[-11.25,-3.75,3.75,11.25],BX=[-12.5,-9.5,-6.5,-3.5];
+AG.forEach((a,i)=>{const cx=CX[i];a.cx=cx;a.bx=BX[i];
+ bx(6.6,.03,4,0x3a5560,cx,.02,-8);bx(.1,2.4,4,0x223344,cx-3.3,1.2,-8);bx(.1,2.4,4,0x223344,cx+3.3,1.2,-8);
+ gl(.05,2.4,4,cx-3.3,1.2,-8);gl(.05,2.4,4,cx+3.3,1.2,-8);gl(2.5,2.4,.05,cx-2.05,1.2,-6);gl(2.5,2.4,.05,cx+2.05,1.2,-6);
+ bx(6.6,.1,.1,a.sh,cx,2.4,-6);bx(.1,2.4,.1,a.sh,cx-.8,1.2,-6);bx(.1,2.4,.1,a.sh,cx+.8,1.2,-6);
+ bx(2.2,.08,.8,0x8a6a45,cx,.75,-8);bx(.08,.75,.8,0x6b5a46,cx-1,.37,-8);bx(.08,.75,.8,0x6b5a46,cx+1,.37,-8);
+ bx(1,.6,.05,0x111111,cx,1.1,-7.9);bx(.9,.5,.03,a.sh,cx,1.1,-8.0).material.emissive=new T.Color(a.sh).multiplyScalar(.5);
+ chair(cx,-9.4,0);tag(cx,2.7,-6,'Kabinet: '+a.n,'rm');
+ a.g=human(a);a.where='desk';a.path=[];a.rest=0;a.busy=false;a.talkUntil=0;a.nxt=Date.now()+R(15,40)*1000;a.cool={};a.pose={ry:0,m:1};
+ a.tg=tag(0,0,0,a.n);a.bub=tag(0,0,0,'','bb');a.bub.vis=false;a.bbUntil=0});
+// joylar
+const PL={
+ lounge:{n:"dam olish zonasida",e:[],x:[],s:[[-.7,7.3,PI,1],[.7,7.3,PI,1]]},
+ read:{n:"kitob o'qiyapti",e:[],x:[],s:[[-11,7,-PI/2,1],[-11,9,-PI/2,1]]},
+ meet:{n:"majlis xonasida",e:[[11,2.4]],x:[[11,2.4]],s:[[9.8,4.6,0,1],[12.2,4.6,0,1],[9.8,8.4,PI,1],[12.2,8.4,PI,1]]},
+ wc:{n:"tualetda",e:[[12.5,1]],x:[[12.5,1]],s:[[12.9,-1.5,PI/2,0]]},
+ chg:{n:"kiyinish xonasida",e:[[-12.5,1]],x:[[-12.5,1]],s:[[-12.5,-2.1,PI,0]]},
+ eat:{n:"ovqatlanyapti",e:[[6.5,9.4],[8,11.2],[8,14.8]],x:[[8,14.8],[8,11.2],[6.5,9.4]],s:[[3,14.2,0,1],[5,14.2,0,1],[3,16.8,PI,1],[5,16.8,PI,1],[11,14.2,0,1],[13,14.2,0,1],[11,16.8,PI,1],[13,16.8,PI,1]]},
+ bed:{n:"yotoqxonada uxlayapti",e:[[-6.5,9.4],[-8,11.2]],x:[[-8,11.2],[-6.5,9.4]],s:[]},
+ boss:{n:"direktor xonasida (oylik)",e:sd=>[[sd*3,.3],[0,.3]],x:sd=>[[0,.3],[sd*3,.3]],s:[[0,-1.5,PI,0]]},
+ home:{n:"ko'chada / uyda",e:sd=>[[sd*2.2,9.4],[0,12],[0,21.2,0,0,'chk'],[0,24],[0,31]],x:sd=>[[0,31],[0,24],[0,21.2,0,0,'chk'],[0,12],[sd*2.2,9.4]],s:[[0,36,0,0,'hid']]}};
+const ev=(f,a)=>typeof f==='function'?f(a.cx<0?-1:1):f;
+// vaqt (Toshkent, UTC+5)
+let sim0=Date.now(),real0=Date.now(),spd=1;const nowSim=()=>sim0+(Date.now()-real0)*spd;
+const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tashkent',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+function hms(){const p={};fmt.formatToParts(new Date(nowSim())).forEach(x=>p[x.type]=x.value);return p}
+const minNow=()=>{const p=hms();return +p.hour*60+ +p.minute};
+function modeAt(m){if(m>=1080||m<465)return'night';if(m<480)return'arrive';if(m>=1050)return'change';if(m>=1020)return'pay';if(m>=930)return'work';if(m>=900)return'eat';if(m>=780)return'work';if(m>=750)return'lunch';if(m>=675)return'work';if(m>=660)return'sync';if(m>=620)return'work';if(m>=600)return'tea';return'work'}
+const MT={night:"18:00. Ish kuni tugadi, hamma uyga ketdi.",arrive:"07:45. Xodimlar ko'chadan kelyapti, qo'riqchilar tekshiradi.",work:"Ish vaqti.",sync:"11:00. Haftalik qisqa yig'ilish, 15 daqiqa.",tea:"10:00. 20 daqiqalik choy tanaffusi.",lunch:"12:30. Tushlik, 30 daqiqa.",eat:"15:00. Hamma ovqatlanishga boradi.",pay:"17:00. Oylik vaqti, direktor xonasiga navbat bilan kirishadi.",change:"17:30. Kiyinish xonasiga boradilar, keyin uyga."};
+// harakat
+function out(a){if(a.where==='desk')return[[a.cx+1.5,-9.4],[a.cx+1.5,-6.8],[a.cx,-5.4]];if(a.where==='bed')return[[a.bx,16.4],...PL.bed.x];return ev(PL[a.where].x,a)}
+function dress(a,pj){a.g.cloth.forEach(m=>m.color.setHex(pj?0x7b8fe0:a.sh))}
+function seat(k,a,si){const pl=PL[k];if(si!=null)return pl.s[si];const u=AG.filter(o=>o!==a&&o.where===k&&o.sp).map(o=>o.sp),f=pl.s.filter(s=>!u.includes(s));return P(f.length?f:pl.s)}
+function goto(a,k,ms,si){if(a.where==='home'){a.g.visible=true;a.g.position.set(R(-2,2),0,35.5)}let p=out(a).slice();if(a.where==='bed'&&k!=='bed')dress(a,0);if(a.where==='chg'&&k==='bed')dress(a,1);
+ if(k==='desk')p.push([a.cx,-5.4],[a.cx+1.5,-6.8],[a.cx+1.5,-9.4],[a.cx,-9.4,0,1]);
+ else{const pl=PL[k];p.push(...ev(pl.e,a));const s=k==='bed'?[a.bx,16.4,0,2]:seat(k,a,si);a.sp=s;p.push(s)}
+ a.path=p;a.where=k;a.moving=1;a.rest=ms?nowSim()+ms:0;a.then=null;a.pose=null}
+function goBreak(a,min){const k=P(['lounge','read','meet','wc','chg','eat']);goto(a,k,min*60000);say(a.n,`${min} daqiqaga dam olishga ketyapman.`,1)}
+function walk(o,dt,sp){const g=o.g;if(!o.path.length)return 0;const p=o.path[0],dx=p[0]-g.position.x,dz=p[1]-g.position.z,d=Math.hypot(dx,dz);
+ if(d<.08){const q=o.path.shift();if(q[4]==='chk')gateCheck(o);if(q[4]==='hid')g.visible=false;if(!o.path.length){o.moving=0;o.pose={ry:q[2]??g.rotation.y,m:q[3]||0};g.rotation.y=o.pose.ry;if(o.pose.m===2)g.position.set(q[0],.7,q[1]+2.55);o.pauseUntil=Date.now()+R(5,9)*1000}return 0}
+ const s=Math.min(d,sp*dt);g.position.x+=dx/d*s;g.position.z+=dz/d*s;g.rotation.y=Math.atan2(dx,dz);return 1}
+function anim(o,w,t,talk){const g=o.g,L=g.legs,A=g.arms,m=(o.pose||{m:0}).m;
+ if(w){g.rotation.x=0;g.position.y=0;const s=Math.sin(t*(o.clean?6:8))*.6;L[0].rotation.x=s;L[1].rotation.x=-s;A[0].rotation.x=-s;A[1].rotation.x=o.clean?-.5:s;return}
+ if(m===2){g.rotation.x=-PI/2;g.position.y=.7;L[0].rotation.x=L[1].rotation.x=A[0].rotation.x=A[1].rotation.x=0;return}
+ g.rotation.x=0;g.position.y=m===1?-.45:0;L[0].rotation.x=L[1].rotation.x=m===1?-1.5:0;
+ if(o.clean){A[0].rotation.x=-.4;A[1].rotation.x=-.7+Math.sin(t*4)*.45}
+ else if(talk){A[0].rotation.x=-.2;A[1].rotation.x=-.7+Math.sin(t*5)*.4}
+ else if(m===1&&o.where==='desk'){const k=o.busy?1:0;A[0].rotation.x=-1.2+Math.sin(t*14)*.08*k;A[1].rotation.x=-1.2+Math.cos(t*14)*.08*k}
+ else if(m===1){A[0].rotation.x=A[1].rotation.x=-.8}
+ else A[0].rotation.x=A[1].rotation.x=Math.sin(t*1.5)*.05}
+// tozalovchilar
+const ZN={o:[[-9,3],[-3,2],[3,1],[0,5],[-5,-3.8],[6,-4],[10,-3]],c:[[8,13],[8,18],[2,20],[14,12]],d:[[-10,13.5],[-5,14.5],[-12,12]]};
+const DO={d:[[-8,11.2],[-6.5,9.4]],c:[[8,11.2],[6.5,9.4]],o:[]},DI={d:[[-6.5,9.4],[-8,11.2]],c:[[6.5,9.4],[8,11.2]],o:[]};
+const CL=[0,1].map(i=>{const c={n:'Tozalovchi '+(i+1),sh:0x4f8f9a,hr:[0x222222,0x5a3b22][i],sk:[0xe6bf98,0xc99b77][i],zone:i?'d':'o',path:[],pauseUntil:Date.now()+i*3000,clean:1,pose:{m:0},where:'x'};
+ c.g=human(c);c.g.position.set(i?-8:-2,0,i?14:3);const arm=c.g.arms[1];
+ const st=new T.Mesh(new T.CylinderGeometry(.03,.03,1.5,6),LM(0x8a6a45));st.position.set(0,-.3,.05);arm.add(st);const br=new T.Mesh(new T.BoxGeometry(.32,.1,.16),LM(0x333333));br.position.set(0,-1.05,.05);arm.add(br);
+ c.tg=tag(0,0,0,c.n);return c});
+// chat va fikrlar
+const hist=[];
+function chat(w,t,cls){const p=document.createElement('p');const b=document.createElement('b');b.textContent=w+': ';if(cls)b.className=cls;p.append(b,t);const l=$('#lg');l.append(p);l.scrollTop=l.scrollHeight;hist.push(w+': '+t);if(hist.length>12)hist.shift()}
+function bubble(w,t,pre){const a=AG.find(x=>x.n===w);if(!a)return;a.bub.e.textContent=(pre||'')+t;a.bbUntil=Date.now()+Math.max(4500,t.length*80)}
+function say(w,t,b){chat(w,t);if(b)bubble(w,t)}
+const TH={pm:["Bugungi rejaga yetishimiz kerak.","Muddat yaqinlashyapti, ustuvorliklarni qayta ko'rib chiqay.","Hisobotni kechgacha tayyorlash kerak."],dev:["Bu funksiyani soddaroq yozsa bo'ladi.","Hmm, xato qayerda ekan?","Testlar o'tdi, ajoyib!"],an:["Ma'lumotlar g'alati ko'rinyapti.","Bu yechimning xavfi nimada ekan?","Arxitekturani qayta chizish kerak shekilli."],ds:["Bu rang juda yorqin, yumshatay.","Interfeys sodda va tushunarli bo'lishi kerak.","Tugmalar biroz kichik bo'ldi."]};
+const WT={lounge:"Charchadim, divanda biroz o'tiray.",read:"Kitob o'qib miyani yangilayman.",wc:"Tualetga chiqib kelaman.",eat:"Choy ichgim keldi, oshxonaga boray."};
+const SC=[(A,B)=>[[A,`Salom, ${B}! Ishlar qalay?`],[B,`Yomon emas, ${A}. Ish ko'p, o'zing-chi?`],[A,`Men ham band edim, biroz yurib kelay dedim.`],[B,`To'g'ri qilibsan, ko'z ham dam olsin.`]],
+ (A,B)=>[[A,`${B}, bugungi vazifani ko'rdingmi?`],[B,`Ha, yarmini tugatdim. Sendan yordam kerak bo'lishi mumkin.`],[A,`Albatta, kerak bo'lsa ayt.`],[B,`Rahmat! Birozdan keyin yozaman.`]],
+ (A,B)=>[[A,`Choy ichamizmi, ${B}?`],[B,`Yaxshi fikr, boshim og'rib qoldi.`],[A,`Unda oshxonaga ketdik, 10 daqiqa dam olamiz.`],[B,`Ketdik, faqat kod haqida gapirmaymiz!`]]];
+async function talk(a,b){a.talkUntil=b.talkUntil=Date.now()+30000;a.tw=b;b.tw=a;let L;
+ try{if(S&&!talk.busy){talk.busy=1;const r=await S(`Ofisda ikki hamkasb uchrashib qoldi: ${a.n} (${a.role}) va ${b.n} (${b.role}). Soat ${hms().hour}:${hms().minute}. ${a.n} holati: ${stat(a)}. ${b.n} holati: ${stat(b)}. Ularning real odamdek, qisqa, 4 qatorli o'zbekcha suhbatini yoz, savol-javob bo'lsin. Faqat JSON massiv: [{"who":"ism","t":"matn"}]. "who" ${a.n} yoki ${b.n} bo'lsin.`,{cache:false});L=JSON.parse(r.text.match(/\[[\s\S]*\]/)[0]).map(x=>[x.who,x.t])}}catch(e){}talk.busy=0;
+ L=L&&L.length?L:P(SC)(a.n,b.n);L.forEach((l,k)=>setTimeout(()=>say(l[0],l[1],1),k*3600));a.talkUntil=b.talkUntil=Date.now()+L.length*3600+600}
+// asosiy tsikl
+let meeting=false,gm=null;
+function applyMode(a,md){if(md==='night'){if(a.where!=='home')askLeave(a,0)}else if(md==='arrive'||md==='work'){if(a.where==='home'||(md==='work'&&a.where!=='desk'))goto(a,'desk')}else if(md==='pay')setTimeout(()=>goto(a,'boss',25000),AG.indexOf(a)*35000);else if(md==='change'){goto(a,'chg',2*60000);a.then='home'}else if(md==='sync'){goto(a,'meet',15*60000,AG.indexOf(a));setTimeout(()=>say(a.n,P(["Kechagi ishlar bo'yicha qisqa hisobot beraman.","Bugungi rejam: kodni tugatish va test.","Menda muddat haqida savol bor."]),1),22000+AG.indexOf(a)*5000)}else if(md==='tea')goto(a,'lounge',20*60000);else if(md==='lunch'||md==='eat')goto(a,'eat',30*60000)}
+setInterval(()=>{const n=Date.now(),md=modeAt(minNow()),p=hms();$('#clk').textContent=`Toshkent: ${p.hour}:${p.minute}:${p.second}`;
+ if(gm!==md){if(gm)say("Jadval",MT[md]);gm=md}
+ AG.forEach(a=>{if(!meeting&&a.cur!==md){a.cur=md;applyMode(a,md)}
+  if(a.rest&&nowSim()>a.rest&&!a.moving&&!meeting&&n>a.talkUntil){a.rest=0;if(a.then){const t=a.then;a.then=null;t==='home'?askLeave(a,0):goto(a,t)}else goto(a,'desk')}
+  if(!meeting&&md==='work'&&!a.busy&&n>a.nxt&&!a.path.length&&n>a.talkUntil&&a.where!=='bed'){a.nxt=n+R(30,70)*1000;
+   if(a.where==='desk'&&Math.random()<.5){const k=P(['lounge','read','wc','eat']);bubble(a.n,WT[k],'💭 ');goto(a,k,R(25,60)*1000*spd)}else if(a.where==='desk')bubble(a.n,P(TH[a.k]),'💭 ')}});
+ $('#ls').innerHTML=AG.map(a=>`<div class="ag"><b>${a.n}</b><br><small>${a.role}</small><br>${stat(a)}<br><small>💰 ${(a.money||0).toLocaleString('ru-RU')} so'm · ⚡ ${Math.round(a.en||0)}%</small></div>`).join('')},1000);
+function frame(t,dt){const n=Date.now();
+ AG.forEach(a=>{const g=a.g,tk=a.talkUntil>n;const w=tk?0:walk(a,dt,3);
+  if(tk&&a.tw)g.rotation.y=Math.atan2(a.tw.g.position.x-g.position.x,a.tw.g.position.z-g.position.z);
+  anim(a,w,t,tk);a.tg.v.set(g.position.x,2.3+g.position.y,g.position.z);a.bub.v.set(g.position.x,2.8+g.position.y,g.position.z);a.bub.vis=n<a.bbUntil&&g.visible;a.tg.vis=g.visible});
+ for(let i=0;i<4;i++)for(let j=i+1;j<4;j++){const a=AG[i],b=AG[j],k=i+','+j;
+  if(a.talkUntil>n||b.talkUntil>n||(a.pose&&a.pose.m===2)||(b.pose&&b.pose.m===2)||a.where==='bed'||b.where==='bed'||(a.cool[k]||0)>n)continue;
+  if(a.g.position.distanceTo(b.g.position)<2.4&&Math.random()<.02){a.cool[k]=n+70000;talk(a,b)}}
+ CL.forEach(c=>{const g=c.g,w=walk(c,dt,1.6);
+  if(!c.path.length&&n>c.pauseUntil){const z=Math.random()<.4?c.zone:P(['o','c','d']),tg=P(ZN[z]);c.path=[...DO[c.zone],...(c.zone===z?[]:DI[z]),tg].map(x=>x.slice());c.zone=z;c.pause=1}
+  anim(c,w,t,0);c.tg.v.set(g.position.x,2.3,g.position.z)})}
+// kamera
+let yaw=0,pit=.85,dist=50,dr=null,dm=0;
+st.addEventListener('pointerdown',e=>{if(e.target.closest('#mn'))return;dr=[e.clientX,e.clientY];dm=0});
+addEventListener('pointermove',e=>{if(!dr)return;const dx=e.clientX-dr[0],dy=e.clientY-dr[1];dm+=Math.abs(dx)+Math.abs(dy);yaw-=dx*.005;pit=Math.min(1.4,Math.max(.25,pit+dy*.004));dr=[e.clientX,e.clientY]});
+addEventListener('pointerup',e=>{if(dr&&dm<6&&st.contains(e.target)&&!e.target.closest('#mn'))pick(e);dr=null});
+st.addEventListener('wheel',e=>{e.preventDefault();dist=Math.min(75,Math.max(8,dist+e.deltaY*.02))},{passive:false});
+function size(){ren.setSize(st.clientWidth,st.clientHeight);cam.aspect=st.clientWidth/st.clientHeight;cam.updateProjectionMatrix()}addEventListener('resize',size);size();
+const rc=new T.Raycaster(),vv=new T.Vector3();let last=0;
+function loop(ms){const t=ms/1000,dt=Math.min(.05,t-last);last=t;
+ cam.position.set(Math.sin(yaw)*Math.cos(pit)*dist,Math.sin(pit)*dist,Math.cos(yaw)*Math.cos(pit)*dist+12);cam.lookAt(0,0,12);
+ frame(t,dt);const w=st.clientWidth,h=st.clientHeight;
+ tags.forEach(o=>{vv.copy(o.v).project(cam);o.e.style.left=(vv.x+1)/2*w+'px';o.e.style.top=(1-vv.y)/2*h+'px';o.e.style.display=(vv.z>1||o.vis===false)?'none':''});
+ ren.render(scene,cam);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+// menyu
+const mn=$('#mn');let cur=null;
+function pick(e){const r=st.getBoundingClientRect(),x=((e.clientX-r.left)/r.width)*2-1,y=-((e.clientY-r.top)/r.height)*2+1;
+ rc.setFromCamera({x,y},cam);const hit=rc.intersectObjects(AG.map(a=>a.g),true)[0];
+ if(!hit){mn.classList.remove('on');return}
+ let o=hit.object;while(o&&!AG.some(a=>a.g===o))o=o.parent;cur=AG.find(a=>a.g===o);menu(e.clientX-r.left,e.clientY-r.top)}
+function menu(x,y){const a=cur;mn.innerHTML=`<h3>${a.n}</h3><small>${stat(a)}</small>
+ <button id="b1">1. Dam ber</button><div id="rs" style="display:none;gap:6px"><select id="mi" aria-label="Daqiqa">${Array.from({length:60},(_,i)=>`<option>${i+1}</option>`).join('')}</select><button id="go">Boshlash</button></div>
+ <button id="b2">2. Hisobot so'rash</button><button id="b3">3. Ish buyurish</button><button id="b4">4. Kabinetga qaytarish</button>`;
+ mn.classList.add('on');mn.style.left=Math.min(x,st.clientWidth-220)+'px';mn.style.top=Math.min(y,st.clientHeight-250)+'px';
+ $('#b1').onclick=()=>{$('#rs').style.display='flex'};
+ $('#go').onclick=()=>{goBreak(a,+$('#mi').value);mn.classList.remove('on')};
+ $('#b2').onclick=()=>{mn.classList.remove('on');report(a)};
+ $('#b3').onclick=()=>{mn.classList.remove('on');assignUI(a)};
+ $('#b4').onclick=()=>{mn.classList.remove('on');if(a.where==='desk'&&!a.moving)say(a.n,"Men allaqachon kabinetdaman.",1);else{say(a.n,"Kabinetga qaytyapman.",1);goto(a,'desk')}}}
+const md=$('#md'),mb=$('#mb');md.onclick=e=>{if(e.target===md)md.classList.remove('on')};
+function modal(h){mb.style.width='';mb.innerHTML=h+'<button id="cl">Yopish</button>';md.classList.add('on');$('#cl').onclick=()=>md.classList.remove('on')}
+// AI
+let S;async function ai(a,q){S=S||await (window.claude?claude.use('sample'):null);if(!S)throw new Error("AI ulanmadi: sahifani claude.ai ichida oching.");
+ const r=await S(`Sen "${a.n}" nomli AI agentsan. Roling: ${a.role}. Dasturlash jamoasida ishlaysan. Doim o'zbek tilida javob ber.\n${q}`,{cache:false});return r.text}
+async function assign(a,txt){a.task=txt;a.busy=true;if(a.where!=='desk'||a.moving)goto(a,'desk');say(a.n,"Vazifa qabul qilindi, boshladim: "+txt,1);
+ try{const r=await ai(a,`Vazifa: ${txt}\nAgar sayt, sahifa yoki ilova so'ralgan bo'lsa: professional darajada, zamonaviy va chiroyli dizaynda, to'liq ishlaydigan bitta HTML fayl yoz (inline CSS va JS), uni \`\`\`html blokida ber va oldidan 2 jumla izoh yoz. Boshqa vazifada amaliy va aniq javob ber.`);
+  a.res=r;a.last=txt;say(a.n,"Vazifa tugadi!",1);notify(`✅ ${a.n} vazifani tugatdi. Bosing, natijani ko'ring`,()=>resultModal(a,txt,r));
+  const b=AG[(AG.indexOf(a)+1)%4];ai(b,`Hamkasbing ${a.n} "${txt}" vazifasini bajardi: """${r.slice(0,1200)}""". 1-2 jumlada fikr bildir.`).then(f=>say(b.n+' → '+a.n,f,1)).catch(()=>{})}
+ catch(e){const m=e.message||e.code||String(e);say(a.n,"Xato: "+m,1);notify(`⚠️ ${a.n}: vazifada xato (${m})`)}finally{a.busy=false;a.task=null}}
+function resultModal(a,txt,r){const m=r.match(/```html\s*([\s\S]*?)```/)||r.match(/(<!doctype[\s\S]*<\/html>)/i),html=m&&m[1];
+ modal(`<h3>${a.n}: natija</h3><small id="tq"></small>`+(html?`<iframe sandbox="allow-scripts" style="width:100%;height:340px;border:1px solid var(--ln);border-radius:8px;background:#fff"></iframe><div style="display:flex;gap:6px"><button id="dl">⬇ HTML yuklab olish</button><button id="cp">📋 Kodni nusxalash</button></div><details><summary>Kodni ko'rish</summary><pre id="cd"></pre></details>`:'')+`<pre id="rt"></pre>`);
+ mb.style.width='min(880px,100%)';$('#tq').textContent=txt;$('#rt').textContent=html?r.replace(/```html[\s\S]*?```/,'(kod yuqorida)'):r;
+ if(html){mb.querySelector('iframe').srcdoc=html;$('#cd').textContent=html;
+  $('#cp').onclick=()=>{navigator.clipboard.writeText(html).then(()=>chat("Tizim","Kod nusxalandi."),()=>chat("Tizim","Nusxalash ishlamadi, 'Kodni ko'rish' dan oling."))};
+  $('#dl').onclick=async()=>{try{const d=await claude.use('downloads');if(!d)throw 0;await d.save({filename:'sayt.html',data:html})}catch(e){chat("Tizim","Yuklab olish ishlamadi, kodni nusxalang.")}}}}
+function assignUI(a){modal(`<h3>${a.n}ga vazifa</h3><textarea id="tx" placeholder="Masalan: login sahifasi uchun JavaScript kodi yoz"></textarea><button id="ok">Buyurish</button>`);
+ $('#ok').onclick=()=>{const v=$('#tx').value.trim();if(!v)return;md.classList.remove('on');assign(a,v)}}
+async function report(a){modal(`<h3>${a.n} hisoboti</h3><pre>Hisobot tayyorlanmoqda...</pre>`);
+ try{const r=await ai(a,`Hozirgi holating: ${stat(a)}. Oxirgi vazifa: ${a.last||'yo\'q'}. Natija: ${a.res?a.res.slice(0,1500):'hali yo\'q'}.\nMenejerga qisqa hisobot ber.`);mb.querySelector('pre').textContent=r}
+ catch(e){mb.querySelector('pre').textContent=e.message||String(e.code||e)}}
+// holat
+function stat(a){if(a.busy)return"Vazifa ustida: "+a.task;if(a.moving)return"Yo'lda: "+(a.where==='desk'?"kabinetiga":PL[a.where].n);
+ if(a.where==='desk')return"Kabinetida ishlayapti";const rm=a.rest?`, ${Math.max(0,Math.ceil((a.rest-nowSim())/60000))} daq qoldi`:'';return PL[a.where].n.replace(/^./,c=>c.toUpperCase())+(a.where==='bed'?'':rm)}
+// majlis va umumiy chat
+$('#mt').onclick=()=>{meeting=!meeting;$('#mt').textContent=meeting?"Majlisni tugatish":"Majlisga chaqirish";
+ if(meeting){AG.forEach((a,i)=>{a.busy=false;goto(a,'meet',24*3600e3,i)});chat("Tizim","Majlisga chaqirildi. Agentlar majlis xonasiga ketyapti, shu yerda yozing.")}
+ else{AG.forEach(a=>{a.cur=null;a.rest=0});chat("Tizim","Majlis tugadi. Agentlar jadvalga qaytdi.")}};
+async function send(){const v=$('#cin').value.trim();if(!v)return;$('#cin').value='';chat('Siz',v,'me');
+ const who=AG;if(/sayt|sahifa|dastur|kod|yasab|yarat|ilova|bot|loyiha/i.test(v)){assign(AG[1],v);return}
+ try{S=S||await (window.claude?claude.use('sample'):null);if(!S)throw new Error("AI ulanmadi: sahifani claude.ai ichida oching.");
+  const r=await S(`Ofis umumiy chati. Soat ${hms().hour}:${hms().minute} (Toshkent). Oxirgi xabarlar:\n${hist.slice(-8).join('\n')}\nOfis egasi yozdi: "${v}"\nUyda bo'lgan agentlar telefon orqali yozadi. Javob beradigan agentlar: ${who.map(a=>`${a.n} (${a.role}; holati: ${stat(a)})`).join('; ')}.\n${meeting?"Majlis ketyapti, hamma qatnashadi, agentlar bir-biriga ham murojaat qilsin. ":"Faqat 1-2 ta mos agent javob bersin. "}Har biri o'z shaxsiyati bilan, real odamdek, qisqa, o'zbekcha yozsin. Faqat JSON massiv: [{"who":"ism","t":"matn"}]. "who" aynan agent ismi bo'lsin.`,{cache:false});
+  JSON.parse(r.text.match(/\[[\s\S]*\]/)[0]).forEach((l,k)=>setTimeout(()=>say(l.who,l.t,1),k*1800))}
+ catch(e){chat("Tizim","Xato: "+(e.message||e.code||e))}}
+$('#cs').onclick=send;$('#cin').onkeydown=e=>{if(e.key==='Enter')send()};
+// boshlash: vaqtga qarab joylashtirish
+(function(){const md0=modeAt(minNow());AG.forEach(a=>{a.cur=md0;if(md0==='night'){a.where='home';a.g.visible=false;a.g.position.set(0,0,35.5)}else a.g.position.set(a.cx,-.45,-9.4)});gm=md0})();
+chat("Tizim","Agentlar vaqtga qarab ishlaydi (Toshkent vaqti). Agentni bosing yoki chatga yozing.");
+// xotira, pul, loyihalar, doska
+let SV={};try{SV=JSON.parse(localStorage.getItem('ofis:v2')||'{}')}catch(e){}
+AG.forEach((a,i)=>{a.money=(SV.money||[])[i]||0;a.paidDay=(SV.paid||[])[i];a.en=100});
+let PJ=SV.pj||[];const SAL=300000;
+function save(){try{localStorage.setItem('ofis:v2',JSON.stringify({money:AG.map(a=>a.money),paid:AG.map(a=>a.paidDay),pj:PJ.slice(-30)}))}catch(e){}}
+const BD=document.createElement('canvas');BD.width=1024;BD.height=400;const bt=new T.CanvasTexture(BD);
+const board=new T.Mesh(new T.PlaneGeometry(5.5,2.15),new T.MeshBasicMaterial({map:bt}));board.position.set(14.8,1.8,6.5);board.rotation.y=-PI/2;scene.add(board);
+function drawBoard(){const c=BD.getContext('2d');c.fillStyle='#f4f1e8';c.fillRect(0,0,1024,400);c.fillStyle='#222';c.font='bold 30px sans-serif';
+ ['Qilinadi','Jarayonda','Tayyor'].forEach((t,i)=>c.fillText(t,20+i*340,40));
+ ['todo','doing','done'].forEach((col,i)=>PJ.filter(p=>p.col===col).slice(-5).forEach((p,j)=>{c.fillStyle=['#ffe08a','#9fd8ff','#a7e8b0'][i];c.fillRect(15+i*340,60+j*66,320,58);c.fillStyle='#222';c.font='22px sans-serif';c.fillText(p.title.slice(0,24),25+i*340,98+j*66)}));bt.needsUpdate=true;renderPL()}
+drawBoard();
+let drill=0,blackout=0;
+function notify(t,fn){const b=document.createElement('button');b.textContent=t;b.onclick=()=>{if(fn)fn();b.remove()};if(!fn)setTimeout(()=>b.remove(),20000);const n=$('#nt');n.prepend(b);while(n.children.length>5)n.lastChild.remove()}
+function ebub(e,t,pre){e.bub.e.textContent=(pre||'')+t;e.bbUntil=Date.now()+Math.max(3500,t.length*70)}
+const TL=["Kunlik vazifalar ilovasi","Valyuta konvertor sahifasi","Fitnes kuzatuvchi","Kitob ro'yxati sayti","Ob-havo vidjeti","Pomodoro taymer","Mini chat ilovasi","Resept daftari"];
+const mkS=(t,b,j)=>`<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width"><title>${t}</title><style>body{font:16px sans-serif;max-width:420px;margin:20px auto;padding:0 14px;background:#f6f8f7;color:#123}input,button{font:inherit;padding:8px;margin:4px 2px}button{background:#0f7f78;color:#fff;border:0;border-radius:6px}li{margin:6px 0}</style><h2>${t}</h2>${b}<script>${j}<\/script>`;
+const SITES=[["Vazifalar ro'yxati","<input id=i placeholder='Vazifa'><button onclick=a()>Qo'shish</button><ul id=l></ul>","function a(){if(!i.value)return;var e=document.createElement('li');e.textContent=i.value;e.onclick=function(){e.style.textDecoration='line-through'};l.appendChild(e);i.value=''}"],
+["Valyuta konvertor","<input id=u type=number value=100><button onclick=c()>USD → so'm</button><p id=r></p>","function c(){r.textContent=(u.value*12800).toLocaleString('ru-RU')+\" so'm (kurs: 12 800)\"}"],
+["Pomodoro taymer","<h1 id=t>25:00</h1><button onclick=s()>Boshlash</button>","var x,n=1500;function s(){clearInterval(x);n=1500;x=setInterval(function(){n--;t.textContent=Math.floor(n/60)+':'+('0'+n%60).slice(-2);if(n<=0)clearInterval(x)},1000)}"],
+["Suv ichish hisoblagichi","<h1 id=c>0</h1><button onclick=p(1)>+1 stakan</button><button onclick=p(-1)>-1</button>","var k=0;function p(d){k=Math.max(0,k+d);c.textContent=k}"]];
+let SI=0;
+async function newProject(){if(newProject.b)return;const a=P(AG.filter(x=>x.where!=='home'));if(!a)return;newProject.b=1;let p;
+ try{if(S){const r=await S(`Sen ${a.n}san (${a.role}). Bitta fayldagi kichik, ishlaydigan veb-sayt yoz: inline CSS va JS, tashqi kutubxonasiz, 70 qatordan oshmasin, interfeys o'zbekcha. Oldingi nomlar: ${PJ.slice(-4).map(x=>x.title).join(', ')}. Format aynan shunday:\nNOM: qisqa nom\nTAVSIF: bir jumla\n---\n<to'liq HTML>`,{cache:false});
+  const m=r.text.match(/NOM:\s*(.*)\nTAVSIF:\s*(.*)\n-+\n([\s\S]*)/);if(m)p={title:m[1].trim(),desc:m[2].trim(),html:m[3].replace(/```(html)?/g,'').trim()}}}catch(e){}
+ if(!p){const q=SITES[SI++%SITES.length];p={title:q[0],desc:"Tezkor prototip: oddiy HTML va JavaScript.",html:mkS(...q)}}
+ const pr={id:Date.now(),title:p.title,desc:p.desc,html:p.html,by:a.n,col:'todo'};PJ.push(pr);if(PJ.length>12)PJ.shift();save();drawBoard();newProject.b=0;
+ notify(`🆕 ${a.n} sayt yaratdi: ${pr.title}. Bosing, ko'rib sinang`,()=>gather(pr));
+ const t=P(AG.filter(x=>x.where!=='home'&&x!==a));if(t)setTimeout(()=>say(t.n,`"${pr.title}" ni sinab ko'rdim, asosiy qismi ishlayapti.`,1),9000)}
+function renderPL(){const e=$('#pl');if(!e)return;e.innerHTML='';PJ.slice(-6).reverse().forEach(p=>{const b=document.createElement('button');b.textContent='📄 '+p.title;b.style.cssText='width:100%;margin:2px 0;text-align:left;background:var(--pn);color:var(--ink);border:1px solid var(--ln)';b.onclick=()=>siteModal(p);e.append(b)})}
+function siteModal(pr){modal(`<h3>${pr.title}</h3><small>${pr.desc} Muallif: ${pr.by}.</small>`+(pr.html?`<iframe sandbox="allow-scripts" style="width:100%;height:340px;border:1px solid var(--ln);border-radius:8px;background:#fff"></iframe><div style="display:flex;gap:6px"><input id="fb" style="flex:1;min-width:0" placeholder="Xato yoki taklifni yozing..."><button id="fx">Agentga yuborish</button><button id="okb">✅ Ishlaydi</button></div>`:''));
+ mb.style.width='min(880px,100%)';if(!pr.html)return;const f=mb.querySelector('iframe');f.srcdoc=pr.html;
+ $('#okb').onclick=()=>{pr.col='done';save();drawBoard();chat('Siz',`"${pr.title}" ishlaydi, ajoyib!`,'me');say(pr.by,"Rahmat! Tayyor deb belgilayman.",1)};
+ $('#fx').onclick=async()=>{const v=$('#fb').value.trim();if(!v)return;$('#fb').value='';chat('Siz',`"${pr.title}": ${v}`,'me');const d=AG[1];bubble(d.n,"Qabul qildim, hozir tuzataman.",'🛠 ');
+  try{if(!S)S=await(window.claude?claude.use('sample'):null);if(!S)throw 0;const r=await S(`Sen ${d.n}san, dasturchi. Mana sayt kodi:\n${pr.html.slice(0,6000)}\nFoydalanuvchi fikri: ${v}\nKodni tuzat. Faqat to'liq yangi HTML kodni qaytar, izohsiz.`,{cache:false});pr.html=r.text.replace(/```(html)?/g,'').trim();save();f.srcdoc=pr.html;say(d.n,"Tuzatdim, qayta sinab ko'ring.",1)}
+  catch(e){say(d.n,"Yozib oldim, keyingi versiyada tuzataman.",1)}}}
+function gather(pr){AG.forEach((a,i)=>{if(a.where!=='meet')goto(a,'meet',4*60000,i)});if(pr.col==='todo'){pr.col='doing';save();drawBoard()}
+ siteModal(pr);
+ const o=AG.filter(x=>x.n!==pr.by);[[pr.by,`Jamoa, yangi loyiha: "${pr.title}". ${pr.desc}`,14],[o[0].n,"Menimcha, buni tez tugatsa bo'ladi. Men tahlilini boshlayman.",19],[o[1].n,"Dizayni sodda va tushunarli bo'lsin.",24],[o[2].n,"Kelishdik, ishga tushamiz!",28]].forEach(l=>setTimeout(()=>say(l[0],l[1],1),l[2]*1000))}
+function askLeave(a,out){if(a.asking||a.where==='home')return;a.asking=1;a.out=out;const q=out?"Direktor, ko'chaga chiqib kelsam bo'ladimi?":"Direktor, ish tugadi, uyga ketsam bo'ladimi?";bubble(a.n,q,'🙋 ');chat(a.n,q);
+ notify(`🚪 ${a.n} ruxsat so'rayapti. Ruxsat berish uchun bosing`,()=>grant(a));a.tm=setTimeout(()=>grant(a,1),120000)}
+function grant(a,auto){if(!a.asking)return;a.asking=0;clearTimeout(a.tm);chat("Siz",auto?`(javob bo'lmadi, ${a.n} o'zi ketdi)`:`${a.n}, ruxsat berildi.`,'me');goto(a,'home',a.out?R(2,5)*60000:0)}
+// qo'riqchilar va notanish odam
+const GD=[[-1.2,21.4,PI/2],[1.2,21.4,-PI/2],[6.7,25,PI/2],[9.3,25,-PI/2]].map((p,i)=>{const e={n:"Qo'riqchi "+(i+1),sh:0x3b4a5a,hr:0x111111,sk:[0xe8b98f,0xd6a67c,0xf0cfb0,0xc89a74][i],pose:{m:0},path:[],where:'x',bbUntil:0};
+ e.g=human(e);e.g.position.set(p[0],0,p[1]);e.g.rotation.y=p[2];const cp=new T.Mesh(new T.BoxGeometry(.46,.09,.46),LM(0x1f2a36));cp.position.set(0,1.95,0);e.g.add(cp);
+ e.tg=tag(0,0,0,e.n);e.bub=tag(0,0,0,'','bb');e.bub.vis=false;return e});
+function gateCheck(o){if(Date.now()<drill)return;const g=GD[0];o.talkUntil=Date.now()+7000;o.tw=g;ebub(g,`Hujjatingizni ko'rsating, ${o.k?o.n:''}.`);setTimeout(()=>ebub(o,"Mana, ruxsatnoma."),2400);setTimeout(()=>ebub(g,"Tekshirdim, o'ting. Xayrli kun!"),4800)}
+const ST={n:'Notanish',sh:0xaa5555,hr:0x222222,sk:0xd6a67c,path:[],pose:{m:0},where:'x',talkUntil:0,on:0,bbUntil:0};ST.g=human(ST);ST.g.visible=false;ST.tg=tag(0,0,0,'Notanish');ST.tg.vis=false;ST.bub=tag(0,0,0,'','bb');ST.bub.vis=false;
+function spawnStranger(k){if(ST.on)return;const c=k==='courier';ST.on=1;ST.stage=0;ST.n=c?'Kuryer':'Notanish';ST.tg.e.textContent=ST.n;
+ ST.end=c?"📦 Kuryer buyurtmani qoldirdi, qo'riqchi direktor xonasiga yetkazdi":"🚫 Notanish odam kirmoqchi edi, qo'riqchilar kiritmadi";
+ ST.D=c?[[ST,"Assalomu alaykum, buyurtma olib keldim."],[GD[0],"Salom. Kimga? Buyurtma raqamini ayting."],[ST,"Direktorga, raqami 4471."],[GD[0],"Ha, ro'yxatda bor. Qutini menga qoldiring."],[ST,"Mana, rahmat. Xayr!"]]:[[ST,"Assalomu alaykum, men ichkariga kirmoqchi edim."],[GD[0],"Salom. Kimni so'rayapsiz? Ruxsatnoma bormi?"],[ST,"Yo'q... do'stim shu yerda ishlaydi, uchrashmoqchi edim."],[GD[0],"Kechirasiz, ruxsatsiz hech kimni kiritmaymiz."],[ST,"Tushunarli, xayr."]];
+ ST.g.visible=true;ST.g.position.set(R(-3,3),0,35.5);ST.path=[[0,25.2]]}
+(function gl(ms){const t=ms/1000,dt=Math.min(.05,t-(gl.l||t)),n=Date.now();gl.l=t;
+ GD.forEach(e=>{anim(e,0,t,0);e.tg.v.set(e.g.position.x,2.3,e.g.position.z);e.bub.v.set(e.g.position.x,2.8,e.g.position.z);e.bub.vis=n<e.bbUntil});
+ if(ST.on){const g=ST.g,w=walk(ST,dt,2.2);anim(ST,w,t,0);ST.tg.v.set(g.position.x,2.3,g.position.z);ST.bub.v.set(g.position.x,2.8,g.position.z);ST.tg.vis=g.visible;ST.bub.vis=n<ST.bbUntil&&g.visible;
+  if(!ST.path.length&&ST.stage===0){ST.stage=1;g.rotation.y=PI;
+   const D=ST.D;
+   D.forEach((d,k)=>setTimeout(()=>{ebub(d[0],d[1]);chat(d[0].n,d[1])},k*3200));
+   setTimeout(()=>{ST.path=[[R(-6,6),31],[R(-12,12),36.5,0,0,'hid']];ST.stage=2;notify(ST.end)},D.length*3200)}
+  if(ST.stage===2&&!ST.path.length&&!g.visible){ST.on=0;ST.tg.vis=false;ST.bub.vis=false}}
+ requestAnimationFrame(gl)})(0);
+const GL=[["Kecha o'yin qanday edi?","Zo'r edi, faqat hakam adolatsiz bo'ldi."],["Choy ichasanmi?","Ha, termosdan quyib ber."],["Bugun xodimlar kech qolmadimi?","Yo'q, hammasi o'z vaqtida kelishdi."],["Kechki navbat og'irmi?","O'rganib qolganman, charchamayman."]];
+setInterval(()=>{const L=P(GL),a=P([GD[2],GD[3]]),b=a===GD[2]?GD[3]:GD[2];ebub(a,L[0]);setTimeout(()=>ebub(b,L[1]),3800)},22000);
+setInterval(()=>{ebub(GD[0],"Hammasi tinchmi?");setTimeout(()=>ebub(GD[1],"Tinch, hech kim ko'rinmayapti."),3500)},47000);
+setInterval(()=>{if(Math.random()<.6)spawnStranger()},100000);setTimeout(spawnStranger,25000);
+setTimeout(newProject,45000);setInterval(newProject,240000);
+setInterval(()=>{const md=modeAt(minNow()),h=hms(),hr=+h.hour+ +h.minute/60,d=Math.max(0,Math.sin((hr-6)/13*PI)),dk=new Date(nowSim()).toDateString();
+ const bl=Date.now()<blackout;amb.intensity=bl?.1:.3+.5*d;sun.intensity=bl?.03:.15+.55*d;scene.background.setRGB(.05+.1*d,.09+.15*d,.11+.2*d);
+ AG.forEach(a=>{if(a.where==='boss'&&!a.moving&&a.paidDay!==dk){a.paidDay=dk;a.money+=SAL;save();bubble(a.n,"Rahmat, oylikni oldim!",'💰 ');notify(`💰 ${a.n} oylik oldi: +${SAL.toLocaleString('ru-RU')} so'm`)}
+  if(a.where==='desk'&&!a.moving)a.en=Math.max(0,a.en-.025);else if(a.where!=='home'&&!a.moving)a.en=Math.min(100,a.en+.25);
+  const free=md==='work'&&a.where==='desk'&&!a.moving&&!meeting&&!a.busy&&!a.asking&&Date.now()>a.talkUntil;
+  if(free&&a.en<20){bubble(a.n,"Charchadim, 5 daqiqa dam olaman.",'😮‍💨 ');goto(a,P(['lounge','read','eat']),5*60000)}
+  else if(free&&Math.random()<.002)askLeave(a,1)});
+ PJ.filter(p=>p.col!=='done').slice(0,1).forEach(p=>{if(Math.random()<.015){p.col=p.col==='todo'?'doing':'done';save();drawBoard();if(p.col==='done')notify(`✅ "${p.title}" loyihasi tayyor bo'ldi`)}})},1000);
+// ofis voqealari
+const EV=[
+ ()=>{notify("📡 Internet uzildi!");chat("Tizim","Internet uzildi.");AG.forEach((a,i)=>{if(a.where!=='home')setTimeout(()=>bubble(a.n,P(["Internet yo'q, deploy qilolmayapman!","Yana provayder muammosi...","Routerni qayta yoqsam kerak."]),'😤 '),i*1500)});setTimeout(()=>{notify("📡 Internet tiklandi");say(AG[1].n,"Tiklandi, davom etamiz.",1)},40000)},
+ ()=>{notify("💡 Svet o'chdi!");blackout=Date.now()+25000;AG.forEach(a=>{if(a.where!=='home')bubble(a.n,"Svet o'chdi! Faylni saqlab ulgurdimmi?",'😳 ')})},
+ ()=>{const a=P(AG.filter(x=>x.where!=='home'));if(!a)return;notify(`🎂 ${a.n}ning tug'ilgan kuni! Hamma dam olish zonasiga yig'ildi`);AG.forEach(x=>{if(x.where!=='home')goto(x,'lounge',4*60000)});const o=P(AG.filter(x=>x!==a));setTimeout(()=>say(o.n,`${a.n}, tug'ilgan kuning bilan!`,1),15000);setTimeout(()=>say(a.n,"Rahmat, hammangizga! Tortdan oling.",1),20000)},
+ ()=>{notify("🚨 Yong'in signali (mashq)! Hamma ko'chaga chiqyapti");drill=Date.now()+110000;AG.forEach(a=>{if(a.where!=='home'){a.asking=0;a.out=1;goto(a,'home',100000);bubble(a.n,"Tinch, ko'chaga chiqamiz!",'🚨 ')}});ebub(GD[0],"Hammasi ko'chaga, tartib bilan!")},
+ ()=>spawnStranger('courier')];
+setTimeout(()=>P(EV)(),60000);setInterval(()=>{if(modeAt(minNow())==='work'&&Math.random()<.6)P(EV)()},150000);
+</script></body></html>
