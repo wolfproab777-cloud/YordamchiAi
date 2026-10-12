@@ -5,7 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import anthropic, bot
 
 client = anthropic.Anthropic()
-INDEX = open(os.path.join(os.path.dirname(__file__), "public", "index.html"), "rb").read()
+INDEX = open(os.path.join(os.path.dirname(__file__), "index.html"), "rb").read()
 hits = []
 
 class H(BaseHTTPRequestHandler):
